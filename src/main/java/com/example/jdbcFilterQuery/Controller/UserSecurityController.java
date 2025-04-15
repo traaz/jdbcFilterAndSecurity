@@ -4,6 +4,7 @@ package com.example.jdbcFilterQuery.Controller;
 import com.example.jdbcFilterQuery.Models.User;
 import com.example.jdbcFilterQuery.Models.UserSecurity;
 import com.example.jdbcFilterQuery.Repository.UserSecurityRepository;
+import com.example.jdbcFilterQuery.Service.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,11 +21,14 @@ public class UserSecurityController {
     private UserSecurityRepository userSecurityRepository;
     private PasswordEncoder encoder;
     private AuthenticationManager authenticationManager;
+    private JwtService jwtService;
 
-    public UserSecurityController(UserSecurityRepository userSecurityRepository, AuthenticationManager authenticationManager, PasswordEncoder encoder) {
+
+    public UserSecurityController(UserSecurityRepository userSecurityRepository, PasswordEncoder encoder, AuthenticationManager authenticationManager, JwtService jwtService) {
         this.userSecurityRepository = userSecurityRepository;
-        this.authenticationManager = authenticationManager;
         this.encoder = encoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/add")
@@ -47,8 +51,8 @@ public class UserSecurityController {
 
             //Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();  // Giriş yapan kullanıcı adı
-
-            return username + " Giriş Yapildi";
+            String token = jwtService.generateToken(userLogin.getName());
+            return token;
         } catch (Exception e) {
             e.printStackTrace(); // Konsola tam exception çıkar
 
