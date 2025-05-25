@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,14 +16,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-
 public class JwtFilter extends OncePerRequestFilter {
     private JwtService jwtService;
     private UserSecurityDetailServiceImpl userSecurityDetailService;
-
-    public JwtFilter(JwtService jwtService, UserSecurityDetailServiceImpl userSecurityDetailService) {
+    private RedisTemplate<String, String> redisTemplate;
+    public JwtFilter(JwtService jwtService, UserSecurityDetailServiceImpl userSecurityDetailService, RedisTemplate<String, String> redisTemplate) {
         this.jwtService = jwtService;
         this.userSecurityDetailService = userSecurityDetailService;
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
@@ -38,13 +39,14 @@ public class JwtFilter extends OncePerRequestFilter {
      }
      String token = authHeader.substring(7);
      String username = jwtService.extractUserName(token);
+     String redisToken = redisTemplate.opsForValue().get(username);  //key username value token
 
-     if(username != null && SecurityContextHolder.getContext().getAuthentication() == null){
+     if(token.equals(redisToken) && SecurityContextHolder.getContext().getAuthentication() == null){
          UserDetails userDetails = userSecurityDetailService.loadUserByUsername(username); //tokendan sadece username exp date falan ama burada password roller vb. gelir
          if(jwtService.validateToken(token)){
              UsernamePasswordAuthenticationToken authenticationToken =
                      new UsernamePasswordAuthenticationToken(userDetails, null, null);
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+              //  authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
          }
 

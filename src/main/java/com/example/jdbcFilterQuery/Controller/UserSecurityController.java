@@ -5,15 +5,15 @@ import com.example.jdbcFilterQuery.Models.User;
 import com.example.jdbcFilterQuery.Models.UserSecurity;
 import com.example.jdbcFilterQuery.Repository.UserSecurityRepository;
 import com.example.jdbcFilterQuery.Service.JwtService;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/auth")
@@ -22,13 +22,19 @@ public class UserSecurityController {
     private PasswordEncoder encoder;
     private AuthenticationManager authenticationManager;
     private JwtService jwtService;
+    private RedisTemplate<String, String> redisTemplate;
 
 
-    public UserSecurityController(UserSecurityRepository userSecurityRepository, PasswordEncoder encoder, AuthenticationManager authenticationManager, JwtService jwtService) {
+
+    public UserSecurityController(UserSecurityRepository userSecurityRepository,
+                                  PasswordEncoder encoder, AuthenticationManager authenticationManager,
+                                  JwtService jwtService,
+                                  RedisTemplate<String, String> redisTemplate) {
         this.userSecurityRepository = userSecurityRepository;
         this.encoder = encoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.redisTemplate = redisTemplate;
     }
 
     @PostMapping("/add")
@@ -52,6 +58,8 @@ public class UserSecurityController {
             //Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();  // Giriş yapan kullanıcı adı
             String token = jwtService.generateToken(userLogin.getName());
+            //key name value token
+            redisTemplate.opsForValue().set(authentication.getName(), token, 1, TimeUnit.MINUTES);
             return token;
         } catch (Exception e) {
             e.printStackTrace(); // Konsola tam exception çıkar
@@ -59,4 +67,6 @@ public class UserSecurityController {
             return "Giriş Hatali ";
         }
     }
+
+
 }
