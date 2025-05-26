@@ -1,9 +1,7 @@
 package com.example.jdbcFilterQuery.Controller;
-
 import com.example.jdbcFilterQuery.Models.User;
 import com.example.jdbcFilterQuery.Repository.UserRepository;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController

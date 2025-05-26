@@ -1,5 +1,4 @@
 package com.example.jdbcFilterQuery.Models;
-
 import org.springframework.data.relational.core.mapping.Table;
 
 @Table(name = "user_information")

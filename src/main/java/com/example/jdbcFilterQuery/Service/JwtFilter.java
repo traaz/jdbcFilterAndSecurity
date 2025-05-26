@@ -1,6 +1,4 @@
 package com.example.jdbcFilterQuery.Service;
-
-import com.example.jdbcFilterQuery.Models.UserDetail;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,10 +7,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
 
 @Component
@@ -31,27 +27,36 @@ public class JwtFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
+        String authHeader = request.getHeader("Authorization");
 
-     String authHeader = request.getHeader("Authorization");
-     if(authHeader == null || !authHeader.startsWith("Bearer ")){
-         filterChain.doFilter(request, response);
-         return;
-     }
-     String token = authHeader.substring(7);
-     String username = jwtService.extractUserName(token);
-     String redisToken = redisTemplate.opsForValue().get(username);  //key username value token
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-     if(token.equals(redisToken) && SecurityContextHolder.getContext().getAuthentication() == null){
-         UserDetails userDetails = userSecurityDetailService.loadUserByUsername(username); //tokendan sadece username exp date falan ama burada password roller vb. gelir
-         if(jwtService.validateToken(token)){
-             UsernamePasswordAuthenticationToken authenticationToken =
-                     new UsernamePasswordAuthenticationToken(userDetails, null, null);
-              //  authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        String token = authHeader.substring(7);
+        String username = jwtService.extractUserName(token);
+
+
+        String isBlacklisted = redisTemplate.opsForValue().get("blackList:" + token);
+        if ("true".equals(isBlacklisted)) {
+            // Token kara listede, devam etme
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
+
+        String redisToken = redisTemplate.opsForValue().get(username);
+        if (token.equals(redisToken) && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userSecurityDetailService.loadUserByUsername(username);
+            if (jwtService.validateToken(token)) {
+                UsernamePasswordAuthenticationToken authenticationToken =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-         }
+            }
+        }
 
-     }
         filterChain.doFilter(request, response);
-
     }
+
 }

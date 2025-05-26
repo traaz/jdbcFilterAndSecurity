@@ -1,5 +1,4 @@
 package com.example.jdbcFilterQuery.Service;
-
 import com.example.jdbcFilterQuery.Models.UserDetail;
 import com.example.jdbcFilterQuery.Models.UserSecurity;
 import com.example.jdbcFilterQuery.Repository.UserSecurityRepository;

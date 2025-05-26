@@ -1,12 +1,10 @@
 package com.example.jdbcFilterQuery.Service;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
-
 import java.security.Key;
 import java.util.Date;
 
@@ -14,7 +12,7 @@ import java.util.Date;
 public class JwtService {
     private String SECRET_KEY ="404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
 
-    private final long EXPIRATION_TIME = 1000 * 60 * 1; //1 dk
+    private final long EXPIRATION_TIME = 1000 * 60 * 2; //2 dk
 
     private Key getSignKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
@@ -32,6 +30,10 @@ public class JwtService {
     //jwt validation islemleri icin gerekli metodlar
     public String extractUserName(String token){
         return parseClaims(token).getSubject();
+    }
+
+    public Date extractExpirationDate(String token){
+        return parseClaims(token).getExpiration();
     }
 
     public boolean validateToken(String token){

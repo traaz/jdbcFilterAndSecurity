@@ -1,6 +1,4 @@
 package com.example.jdbcFilterQuery.Repository;
-
-
 import com.example.jdbcFilterQuery.Models.UserSecurity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
